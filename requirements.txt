@@ -1,0 +1,5 @@
+beautifulsoup4~=4.9.3
+requests~=2.25.0
+lxml ~= 4.6.1
+mysql-connector-python~=8.0.22
+python-dotenv~=0.15.0
