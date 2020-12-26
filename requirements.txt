@@ -3,3 +3,4 @@ requests~=2.25.0
 lxml ~= 4.6.1
 mysql-connector-python~=8.0.22
 python-dotenv~=0.15.0
+sqlalchemy
