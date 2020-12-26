@@ -1,10 +1,11 @@
 from database import *
+from datetime import datetime
 
 database = Database(test=True)
 
 database.add_new_record(
         name='Testowy produkt',
-        ean='8457251369584',
+        ean=8457251369584,
         offer_url='www.test.pl',
         product_img='smutna_zaba.jpg',
         seller='Chiński sprzedawca jaj',
@@ -13,8 +14,9 @@ database.add_new_record(
         weight='12 kg',
         category='Produkty testowe',
         subcategory='Smutne żaby',
-        price='123.12',
-        rating='4.4')
+        price=123.12,
+        rating=4.4,
+        updated_at=datetime.now())
 
 
 def test_get_category_id():
@@ -50,9 +52,9 @@ def test_get_products_url():
 
 
 def test_add_cart_amount():
-    database.add_cart_amount(amount=10, offer_id=1)
-    database.add_cart_amount(amount=14, offer_id=2)
-    database.add_cart_amount(amount=12, offer_id=3)
+    database.add_cart_amount(amount=10, offer_id=1, timestamp=datetime.now())
+    database.add_cart_amount(amount=14, offer_id=2, timestamp=datetime.now())
+    database.add_cart_amount(amount=12, offer_id=3, timestamp=datetime.now())
     assert database.sess.query(Sales).filter_by(offer_id=1).first().amount == 10
     assert database.sess.query(Sales).filter_by(offer_id=2).first().amount == 14
     assert database.sess.query(Sales).filter_by(offer_id=3).first().amount == 12

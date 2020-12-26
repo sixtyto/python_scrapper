@@ -11,7 +11,7 @@ load_dotenv()
 
 class Scrapper:
     def __init__(self, database, argv=0):
-        self.timestamp = datetime.now().isoformat()
+        self.timestamp = datetime.now()
         self.bol_url = getenv("URL_BOL")
         self.db = database
         self.proxies = {
@@ -31,7 +31,7 @@ class Scrapper:
             self.iterate_proxies = itertools.cycle(self.proxies_list)
 
     def set_time(self):
-        self.timestamp = datetime.now().isoformat()
+        self.timestamp = datetime.now()
 
     def change_proxies(self, proxy_list):
         self.proxies_list = proxy_list
@@ -156,7 +156,8 @@ class Scrapper:
                     offer_id = self.db.get_offer_id(link)
 
                     if offer_id:
-                        self.db.update_database(offer_id[0], price, self.timestamp, rating)
+                        self.db.update_database(offer_id=offer_id, price=price,
+                                                rating=rating, updated_at=self.timestamp)
                         continue
 
                     offer_content = self.check_proxies(f'{self.bol_url}{link}')
@@ -180,8 +181,10 @@ class Scrapper:
                         continue
 
                     try:
-                        self.db.add_new_record(name, ean, link, image_url, seller, brand, dimensions, weight, category,
-                                               subcategory, price, rating, self.timestamp)
+                        self.db.add_new_record(name=name, ean=ean, link=link, image_url=image_url, seller=seller,
+                                               brand=brand, dimensions=dimensions, weight=weight, category=category,
+                                               subcategory=subcategory, price=price, rating=rating,
+                                               updated_at=self.timestamp)
                     except:
                         print('error', name, ean, link, image_url, seller, brand, dimensions, weight, category,
                               subcategory, price, rating, self.timestamp)

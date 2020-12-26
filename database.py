@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
 from dotenv import load_dotenv
 from os import getenv
 
@@ -162,7 +161,6 @@ class CategoriesProductsCount(Base):
 class Database:
     def __init__(self, host=getenv('HOST'), port=getenv('PORT'), user=getenv('DB_USER'), password=getenv('DB_PASSWORD'),
                  database=getenv('DATABASE'), test=False):
-        self.now = datetime.now()
         if test:
             self.engine = create_engine('sqlite:///:memory:', echo=True)
             self.create_database()
@@ -174,12 +172,12 @@ class Database:
     def create_database(self):
         Base.metadata.create_all(self.engine)
 
-    def get_offer_id(self, offer_url):
+    def get_offer_id(self, offer_url: str) -> int:
         if offer_id := self.sess.query(Offers).filter_by(offer_url=offer_url).first():
             return offer_id.id
         return -1
 
-    def get_brand_id(self, brand):
+    def get_brand_id(self, brand: str) -> int:
         if brand_id := self.sess.query(Brands).filter_by(name=brand).first():
             return brand_id.id
         else:
@@ -187,7 +185,7 @@ class Database:
             self.sess.commit()
         return self.sess.query(Brands).filter_by(name=brand).first().id
 
-    def get_category_id(self, category):
+    def get_category_id(self, category: str) -> int:
         if category_id := self.sess.query(Categories).filter_by(name=category).first():
             return category_id.id
         else:
@@ -195,7 +193,7 @@ class Database:
             self.sess.commit()
         return self.sess.query(Categories).filter_by(name=category).first().id
 
-    def get_subcategory_id(self, subcategory):
+    def get_subcategory_id(self, subcategory: str) -> int:
         if subcategory_id := self.sess.query(Subcategories).filter_by(name=subcategory).first():
             return subcategory_id.id
         else:
@@ -203,21 +201,22 @@ class Database:
             self.sess.commit()
         return self.sess.query(Subcategories).filter_by(name=subcategory).first().id
 
-    def get_product_id(self, ean):
+    def get_product_id(self, ean: int) -> int:
         if product_id := self.sess.query(Products).filter_by(ean=ean).first():
             return product_id.id
         return -1
 
-    def get_products_urls(self, product_id):
+    def get_products_urls(self, product_id: int) -> list:
         return self.sess.query(Offers).filter_by(product_id=product_id).all()
 
-    def update_database(self, offer_id, price, rating):
+    def update_database(self, offer_id: int, price: float, rating: float, updated_at):
         print(f"updating {offer_id}: {price}, {rating}")
-        self.sess.add(PriceHistory(price=price, rating=rating, offer_id=offer_id))
+        self.sess.add(PriceHistory(price=price, rating=rating, offer_id=offer_id, updated_at=updated_at))
         self.sess.commit()
 
-    def add_new_record(self, name, ean, offer_url, product_img, seller, brand, dimensions, weight, category,
-                       subcategory, price, rating):
+    def add_new_record(self, name: str, ean: int, offer_url: str, product_img: str, seller: str, brand: str,
+                       dimensions: str, weight: str, category: str, subcategory: str, price: float, rating: float,
+                       updated_at):
         print(f"adding {ean}: {offer_url}")
         self.sess.add(Products(name=name, ean=ean, product_img=product_img, brand_id=self.get_brand_id(brand),
                                dimensions=dimensions, weight=weight, category_id=self.get_category_id(category),
@@ -226,10 +225,10 @@ class Database:
         self.sess.add(Offers(offer_url=offer_url, seller_id=seller, portal_id='bol',
                              product_id=self.get_product_id(ean)))
         self.sess.commit()
-        self.sess.add(PriceHistory(price=price, rating=rating, offer_id=self.get_offer_id(offer_url), updated_at=self.now))
+        self.sess.add(PriceHistory(price=price, rating=rating, offer_id=self.get_offer_id(offer_url), updated_at=updated_at))
         self.sess.commit()
 
-    def get_cart_urls(self):
+    def get_cart_urls(self) -> list:
         ids = self.sess.query(FollowedProducts).distinct().all()
         urls = []
         for ID in ids:
@@ -241,6 +240,6 @@ class Database:
                 results.append((offer_id, url))
         return results
 
-    def add_cart_amount(self, offer_id, amount):
-        self.sess.add(Sales(offer_id=offer_id, amount=amount))
+    def add_cart_amount(self, offer_id: int, amount: int, timestamp):
+        self.sess.add(Sales(offer_id=offer_id, amount=amount, updated_at=timestamp))
         self.sess.commit()
