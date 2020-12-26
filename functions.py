@@ -126,3 +126,8 @@ def get_specification(offer):
                         else:
                             dimensions += ' x ' + specification_value
     return ean, remove_spaces(dimensions), remove_spaces(weight)
+
+
+def log_error(error_message: str, timestamp):
+    with open("log.txt", "a") as f:
+        f.write(f'{timestamp}: {error_message}\n')
