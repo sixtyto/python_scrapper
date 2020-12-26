@@ -209,6 +209,14 @@ class Database:
     def get_products_urls(self, product_id: int) -> list:
         return self.sess.query(Offers).filter_by(product_id=product_id).all()
 
+    def get_portal_id(self, portal: str) -> int:
+        if portal_id := self.sess.query(Portals).filter_by(name=portal).first():
+            return portal_id.id
+        else:
+            self.sess.add(Categories(name=portal))
+            self.sess.commit()
+        return self.sess.query(Categories).filter_by(name=portal).first().id
+
     def update_database(self, offer_id: int, price: float, rating: float, updated_at):
         print(f"updating {offer_id}: {price}, {rating}")
         self.sess.add(PriceHistory(price=price, rating=rating, offer_id=offer_id, updated_at=updated_at))
@@ -216,13 +224,13 @@ class Database:
 
     def add_new_record(self, name: str, ean: int, offer_url: str, product_img: str, seller: str, brand: str,
                        dimensions: str, weight: str, category: str, subcategory: str, price: float, rating: float,
-                       updated_at):
+                       portal: str, updated_at):
         print(f"adding {ean}: {offer_url}")
         self.sess.add(Products(name=name, ean=ean, product_img=product_img, brand_id=self.get_brand_id(brand),
                                dimensions=dimensions, weight=weight, category_id=self.get_category_id(category),
                                subcategory_id=self.get_subcategory_id(subcategory)))
         self.sess.commit()
-        self.sess.add(Offers(offer_url=offer_url, seller_id=seller, portal_id='bol',
+        self.sess.add(Offers(offer_url=offer_url, seller_id=seller, portal_id=self.get_portal_id(portal=portal),
                              product_id=self.get_product_id(ean)))
         self.sess.commit()
         self.sess.add(PriceHistory(price=price, rating=rating, offer_id=self.get_offer_id(offer_url), updated_at=updated_at))

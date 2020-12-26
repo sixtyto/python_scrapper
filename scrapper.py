@@ -33,7 +33,7 @@ class Scrapper:
     def set_time(self):
         self.timestamp = datetime.now()
 
-    def change_proxies(self, proxy_list):
+    def change_proxies(self, proxy_list: list):
         self.proxies_list = proxy_list
         self.iterate_proxies = itertools.cycle(proxy_list)
 
@@ -42,7 +42,7 @@ class Scrapper:
         self.proxies['http'] = proxy
         self.proxies['https'] = proxy
 
-    def check_proxies(self, url_to_get):
+    def check_proxies(self, url_to_get: str):
         self.switch_proxies()
         working = False
         while not working:
@@ -52,14 +52,14 @@ class Scrapper:
                 print(f'{self.proxies} error')
                 self.switch_proxies()
 
-    def get_last_page(self, url):
+    def get_last_page(self, url: str) -> int:
         try:
             return int(BeautifulSoup(self.check_proxies(url).content, features='lxml').find('ul', class_="pagination")
                        .find_all('a', class_='js_pagination_item')[-2].get_text())
         except:
             return 1
 
-    def get_current_amount(self, product_id, url):
+    def set_current_amount(self, product_id: int, url: str):
         self.set_time()
         link = f"{self.bol_url}{url}"
         offer_content = self.check_proxies(link)
@@ -91,7 +91,7 @@ class Scrapper:
         print(product_id, amount, self.timestamp)
         self.db.add_cart_amount(product_id, amount, self.timestamp)
 
-    def get_subcategories(self, url):
+    def get_subcategories(self, url: str) -> list:
         subcategories = []
         sub_subcategories = []
         third_sub = []
@@ -155,7 +155,7 @@ class Scrapper:
 
                     offer_id = self.db.get_offer_id(link)
 
-                    if offer_id:
+                    if offer_id != -1:
                         self.db.update_database(offer_id=offer_id, price=price,
                                                 rating=rating, updated_at=self.timestamp)
                         continue
@@ -183,7 +183,7 @@ class Scrapper:
                     try:
                         self.db.add_new_record(name=name, ean=ean, link=link, image_url=image_url, seller=seller,
                                                brand=brand, dimensions=dimensions, weight=weight, category=category,
-                                               subcategory=subcategory, price=price, rating=rating,
+                                               subcategory=subcategory, price=price, rating=rating, portal='bol',
                                                updated_at=self.timestamp)
                     except:
                         print('error', name, ean, link, image_url, seller, brand, dimensions, weight, category,

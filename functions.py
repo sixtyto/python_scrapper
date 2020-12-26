@@ -1,33 +1,33 @@
 import re
 
 
-def remove_spaces(text):
+def remove_spaces(text: str) -> str:
     return re.sub(' +', ' ', text).strip()
 
 
-def col_or_row(content):
+def col_or_row(content) -> str:
     if len(content.find_all('li', class_='product-item--row')) > 0:
         return content.find_all('li', class_='product-item--row')
     elif len(content.find_all('li', class_='product-item--column')) > 0:
         return content.find_all('li', class_='product-item--column')
     else:
-        return None
+        return ""
 
 
-def get_link(content):
+def get_link(content) -> str:
     return content.find('a', class_='product-title')['href']
 
 
-def get_name(content):
+def get_name(content) -> str:
     return remove_spaces(content.find('a', class_='product-title').get_text().replace("\n", ""))
 
 
-def get_price(content):
+def get_price(content) -> float:
     string = content.find('span', class_="promo-price")
     if string:
         string = string.get_text().strip()
     else:
-        return None
+        return 0
     string = string.replace("\n  ", ".")
     if string.split(".")[1] == "-":
         return float(string.split(".")[0] + '.00')
@@ -35,7 +35,7 @@ def get_price(content):
         return float(string)
 
 
-def get_rating(content):
+def get_rating(content) -> float:
     rating = content.find("div", attrs={'data-test': 'rating-stars'})
     if rating:
         rating = remove_spaces(rating['title'])
@@ -48,7 +48,7 @@ def get_rating(content):
         return 0.0
 
 
-def get_brand(offer):
+def get_brand(offer) -> str:
     brand = offer.find(attrs={'data-role': 'BRAND'})
     if not brand:
         return "n/a"
@@ -56,7 +56,7 @@ def get_brand(offer):
         return remove_spaces(brand.get_text())
 
 
-def get_seller(offer):
+def get_seller(offer) -> str:
     seller = offer.find('a', class_='product-seller__name')
     if not seller:
         return "Bol.com"
@@ -64,7 +64,7 @@ def get_seller(offer):
         return remove_spaces(seller.get_text().replace("\n", ""))
 
 
-def get_image(offer):
+def get_image(offer) -> str:
     if offer.find('img', class_='js_product_img'):
         return offer.find('img', class_='js_product_img')['src']
     else:
