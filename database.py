@@ -162,7 +162,7 @@ class Database:
     def __init__(self, host=getenv('HOST'), port=getenv('PORT'), user=getenv('DB_USER'), password=getenv('DB_PASSWORD'),
                  database=getenv('DATABASE'), test=False):
         if test:
-            self.engine = create_engine('sqlite:///:memory:', echo=True)
+            self.engine = create_engine('sqlite:///database.db')
             self.create_database()
         else:
             self.engine = create_engine(f'mysql:///{user}:{password}@{host}:{port}/{database}')
@@ -213,9 +213,17 @@ class Database:
         if portal_id := self.sess.query(Portals).filter_by(name=portal).first():
             return portal_id.id
         else:
-            self.sess.add(Categories(name=portal))
+            self.sess.add(Portals(name=portal))
             self.sess.commit()
-        return self.sess.query(Categories).filter_by(name=portal).first().id
+        return self.sess.query(Portals).filter_by(name=portal).first().id
+
+    def get_seller_id(self, seller: str) -> int:
+        if seller_id := self.sess.query(Sellers).filter_by(name=seller).first():
+            return seller_id.id
+        else:
+            self.sess.add(Sellers(name=seller))
+            self.sess.commit()
+        return self.sess.query(Sellers).filter_by(name=seller).first().id
 
     def update_database(self, offer_id: int, price: float, rating: float, updated_at):
         print(f"updating {offer_id}: {price}, {rating}")
@@ -226,14 +234,15 @@ class Database:
                        dimensions: str, weight: str, category: str, subcategory: str, price: float, rating: float,
                        portal: str, updated_at):
         print(f"adding {ean}: {offer_url}")
-        self.sess.add(Products(name=name, ean=ean, product_img=product_img, brand_id=self.get_brand_id(brand),
-                               dimensions=dimensions, weight=weight, category_id=self.get_category_id(category),
-                               subcategory_id=self.get_subcategory_id(subcategory)))
+        self.sess.add(Products(name=name, ean=ean, product_img=product_img, brand_id=self.get_brand_id(brand=brand),
+                               dimensions=dimensions, weight=weight, category_id=self.get_category_id(category=category),
+                               subcategory_id=self.get_subcategory_id(subcategory=subcategory)))
         self.sess.commit()
-        self.sess.add(Offers(offer_url=offer_url, seller_id=seller, portal_id=self.get_portal_id(portal=portal),
-                             product_id=self.get_product_id(ean)))
+        self.sess.add(Offers(offer_url=offer_url, seller_id=self.get_seller_id(seller=seller),
+                             portal_id=self.get_portal_id(portal=portal), product_id=self.get_product_id(ean=ean)))
         self.sess.commit()
-        self.sess.add(PriceHistory(price=price, rating=rating, offer_id=self.get_offer_id(offer_url), updated_at=updated_at))
+        self.sess.add(PriceHistory(price=price, rating=rating, offer_id=self.get_offer_id(offer_url=offer_url),
+                                   updated_at=updated_at))
         self.sess.commit()
 
     def get_cart_urls(self) -> list:

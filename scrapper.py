@@ -49,7 +49,7 @@ class Scrapper:
             try:
                 return get(url_to_get, proxies=self.proxies)
             except:
-                print(f'{self.proxies} error')
+                log_error(error_message=f'proxy: {self.proxies}', timestamp=self.timestamp)
                 self.switch_proxies()
 
     def get_last_page(self, url: str) -> int:
@@ -70,7 +70,7 @@ class Scrapper:
         if add_to_cart_url:
             add_to_cart_url = f"{self.bol_url}{add_to_cart_url.replace('quantity=1', 'quantity=500')}"
         else:
-            print(link, add_to_cart_url, "dostawa error")
+            log_error(error_message=f'cart, dostawa: {link}, {add_to_cart_url}', timestamp=self.timestamp)
             self.db.add_cart_amount(product_id, 0, self.timestamp)
             return
 
@@ -79,6 +79,7 @@ class Scrapper:
                 session.get(add_to_cart_url, proxies=self.proxies)
                 cart_content = session.get('https://www.bol.com/nl/order/basket.html', proxies=self.proxies)
             except:
+                log_error(error_message=f'cart, max: {link}, {add_to_cart_url}', timestamp=self.timestamp)
                 self.db.add_cart_amount(product_id, 555, self.timestamp)
                 return
         cart = BeautifulSoup(cart_content.content, features='lxml')
@@ -86,9 +87,8 @@ class Scrapper:
         if amount:
             amount = amount[0].get_text()
         else:
-            print(link, "cart error")
+            log_error(error_message=f'cart, inny: {link}, {add_to_cart_url}', timestamp=self.timestamp)
             return
-        print(product_id, amount, self.timestamp)
         self.db.add_cart_amount(product_id, amount, self.timestamp)
 
     def get_subcategories(self, url: str) -> list:
@@ -146,46 +146,47 @@ class Scrapper:
 
                 for offer in offers_list:
                     self.set_time()
-                    link = get_link(offer)
+                    offer_url = get_link(offer)
                     name = get_name(offer)
                     price = get_price(offer)
                     if not price:
                         continue
                     rating = get_rating(offer)
 
-                    offer_id = self.db.get_offer_id(link)
+                    offer_id = self.db.get_offer_id(offer_url)
 
                     if offer_id != -1:
                         self.db.update_database(offer_id=offer_id, price=price,
                                                 rating=rating, updated_at=self.timestamp)
                         continue
 
-                    offer_content = self.check_proxies(f'{self.bol_url}{link}')
+                    offer_content = self.check_proxies(f'{self.bol_url}{offer_url}')
                     offer = BeautifulSoup(offer_content.content, features='lxml')
 
                     ean, dimensions, weight = get_specification(offer)
                     for _ in range(3):
                         if ean == 0:
-                            offer_content = self.check_proxies(f'{self.bol_url}{link}')
+                            offer_content = self.check_proxies(f'{self.bol_url}{offer_url}')
                             offer = BeautifulSoup(offer_content.content, features='lxml')
                             ean, dimensions, weight = get_specification(offer)
 
                     category = get_category(offer)
                     brand = get_brand(offer)
                     seller = get_seller(offer)
-                    image_url = get_image(offer)
+                    product_img = get_image(offer)
                     subcategory = get_subcategory(offer)
 
                     if not subcategory or ean == 0:
-                        print('failed to get EAN')
+                        log_error(error_message=f'ean: {offer_url}', timestamp=self.timestamp)
                         continue
 
                     try:
-                        self.db.add_new_record(name=name, ean=ean, link=link, image_url=image_url, seller=seller,
+                        self.db.add_new_record(name=name, ean=ean, offer_url=offer_url, product_img=product_img, seller=seller,
                                                brand=brand, dimensions=dimensions, weight=weight, category=category,
                                                subcategory=subcategory, price=price, rating=rating, portal='bol',
                                                updated_at=self.timestamp)
                     except:
-                        print('error', name, ean, link, image_url, seller, brand, dimensions, weight, category,
-                              subcategory, price, rating, self.timestamp)
+                        log_error(error_message=f'add: {name}, {ean}, {offer_url}, {product_img}, {seller}, {brand},'
+                                                f'{dimensions}, {weight}, {category}, {subcategory}, {price},'
+                                                f'{rating}', timestamp=self.timestamp)
                         continue

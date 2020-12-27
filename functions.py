@@ -38,7 +38,7 @@ def get_price(content) -> float:
 def get_rating(content) -> float:
     rating = content.find("div", attrs={'data-test': 'rating-stars'})
     if rating:
-        rating = remove_spaces(rating['title'])
+        rating = remove_spaces(rating['title'].split(" ")[1])
         try:
             rating = float(rating)
         except:
@@ -61,6 +61,10 @@ def get_seller(offer) -> str:
     if not seller:
         return "Bol.com"
     else:
+        seller_rating = seller.find('span', class_='seller-rating')
+        if seller_rating:
+            seller_rating = remove_spaces(seller_rating.get_text().replace("\n", ""))
+            return remove_spaces(seller.get_text().replace("\n", "").replace(seller_rating, ""))
         return remove_spaces(seller.get_text().replace("\n", ""))
 
 
