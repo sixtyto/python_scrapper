@@ -67,12 +67,3 @@ def test_add_cart_amount():
 def test_get_portal_id():
     assert database.get_portal_id('bol') == 1
     assert database.get_portal_id('allegro') == 2
-
-
-def test_scrapper_run():
-    scrapper = Scrapper(database=database)
-    scrapper.category = "https://www.bol.com/nl/l/dranken-delicatessen/N/36080/?showAll=true"
-    scrapper.proxies_list = ['', '']
-    scrapper.iterate_proxies = itertools.cycle(scrapper.proxies_list)
-    scrapper.subcategories_list = scrapper.get_subcategories(scrapper.category)
-    scrapper.run()
