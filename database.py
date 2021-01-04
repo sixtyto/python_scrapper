@@ -159,13 +159,18 @@ class CategoriesProductsCount(Base):
 
 
 class Database:
-    def __init__(self, host=getenv('HOST'), port=getenv('PORT'), user=getenv('DB_USER'), password=getenv('DB_PASSWORD'),
-                 database=getenv('DATABASE'), test=False):
+    def __init__(self,
+                 db_host=getenv('DB_HOST'),
+                 db_port=getenv('PORT'),
+                 db_user=getenv('DB_USER'),
+                 db_password=getenv('DB_PASSWORD'),
+                 database=getenv('DATABASE'),
+                 test=False):
         if test:
             self.engine = create_engine('sqlite:///database.db')
             self.create_database()
         else:
-            self.engine = create_engine(f'mysql:///{user}:{password}@{host}:{port}/{database}')
+            self.engine = create_engine(f'mysql://{db_user}:{db_password}@{db_host}:{db_port}/{database}')
         self.Session = sessionmaker(bind=self.engine)
         self.sess = self.Session()
 
@@ -234,10 +239,12 @@ class Database:
                        dimensions: str, weight: str, category: str, subcategory: str, price: float, rating: float,
                        portal: str, updated_at):
         print(f"adding {ean}: {offer_url}")
-        self.sess.add(Products(name=name, ean=ean, product_img=product_img, brand_id=self.get_brand_id(brand=brand),
-                               dimensions=dimensions, weight=weight, category_id=self.get_category_id(category=category),
-                               subcategory_id=self.get_subcategory_id(subcategory=subcategory)))
-        self.sess.commit()
+        if self.get_product_id(ean=ean) == -1:
+            self.sess.add(Products(name=name, ean=ean, product_img=product_img, brand_id=self.get_brand_id(brand=brand),
+                                   dimensions=dimensions, weight=weight,
+                                   category_id=self.get_category_id(category=category),
+                                   subcategory_id=self.get_subcategory_id(subcategory=subcategory)))
+            self.sess.commit()
         self.sess.add(Offers(offer_url=offer_url, seller_id=self.get_seller_id(seller=seller),
                              portal_id=self.get_portal_id(portal=portal), product_id=self.get_product_id(ean=ean)))
         self.sess.commit()

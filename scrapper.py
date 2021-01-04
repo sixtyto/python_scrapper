@@ -39,8 +39,8 @@ class Scrapper:
 
     def switch_proxies(self):
         proxy = next(self.iterate_proxies)
-        self.proxies['http'] = proxy
-        self.proxies['https'] = proxy
+        self.proxies['http'] = proxy.split(':')[0]
+        self.proxies['https'] = proxy.split(':')[0]
 
     def check_proxies(self, url_to_get: str):
         self.switch_proxies()
@@ -148,6 +148,9 @@ class Scrapper:
                     self.set_time()
                     offer_url = get_link(offer)
                     name = get_name(offer)
+                    if len(offer_url) > 191 or len(name) > 191:
+                        continue
+
                     price = get_price(offer)
                     if not price:
                         continue
@@ -181,10 +184,10 @@ class Scrapper:
                         continue
 
                     try:
-                        self.db.add_new_record(name=name, ean=ean, offer_url=offer_url, product_img=product_img, seller=seller,
-                                               brand=brand, dimensions=dimensions, weight=weight, category=category,
-                                               subcategory=subcategory, price=price, rating=rating, portal='bol',
-                                               updated_at=self.timestamp)
+                        self.db.add_new_record(name=name, ean=ean, offer_url=offer_url, product_img=product_img,
+                                               seller=seller, brand=brand, dimensions=dimensions, weight=weight,
+                                               category=category, subcategory=subcategory, price=price, rating=rating,
+                                               portal='bol', updated_at=self.timestamp)
                     except:
                         log_error(error_message=f'add: {name}, {ean}, {offer_url}, {product_img}, {seller}, {brand},'
                                                 f'{dimensions}, {weight}, {category}, {subcategory}, {price},'
