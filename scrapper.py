@@ -39,8 +39,8 @@ class Scrapper:
 
     def switch_proxies(self):
         proxy = next(self.iterate_proxies)
-        self.proxies['http'] = proxy.split(':')[0]
-        self.proxies['https'] = proxy.split(':')[0]
+        self.proxies['http'] = f'http://{proxy}'
+        self.proxies['https'] = f'http://{proxy}'
 
     def check_proxies(self, url_to_get: str):
         self.switch_proxies()

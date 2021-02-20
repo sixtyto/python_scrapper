@@ -212,7 +212,7 @@ class Database:
         return -1
 
     def get_products_urls(self, product_id: int) -> list:
-        return self.sess.query(Offers).filter_by(product_id=product_id).all()
+        return self.sess.query(Offers.offer_url).filter_by(product_id=product_id).all()
 
     def get_portal_id(self, portal: str) -> int:
         if portal_id := self.sess.query(Portals).filter_by(name=portal).first():
@@ -253,10 +253,12 @@ class Database:
         self.sess.commit()
 
     def get_cart_urls(self) -> list:
-        ids = self.sess.query(FollowedProducts).distinct().all()
+        ids = self.sess.query(FollowedProducts.product_id).distinct().all()
         urls = []
+        counter = 0
         for ID in ids:
             urls.append((ID, self.get_products_urls(ID)))
+            counter += 1
         results = []
         for item in urls:
             offer_id = item[0]
